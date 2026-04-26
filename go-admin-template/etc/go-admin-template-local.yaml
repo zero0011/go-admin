@@ -1,0 +1,27 @@
+Server:
+  Name: admin
+  Host: 0.0.0.0
+  Port: 8888
+  BaseUrl: http://127.0.0.1:8888
+
+Jwt:
+  Secret: 99fb6dae-caa4-45d1-8635-8ce8e2078d76
+  Expire: 24
+
+Log:
+  Dir: /Users/zhushuai05/project/go-admin/go-admin-template/logs
+  Level: trace # 合法选项 "panic" "fatal" "error" "warn" "warning" "info" "debug" "trace"
+
+Mysql:
+  Host: 127.0.0.1
+  Port: 3306
+  User: root
+  Pwd: 123456
+  Db: go-admin-template
+
+Redis:
+  Host: 127.0.0.1
+  Port: 6379
+  User:
+  Pwd:
+  Db: 0

@@ -1,0 +1,32 @@
+syntax = "v1"
+
+type (
+    PathID {
+        ID int `uri:"id"`
+    }
+
+    ParamID {
+        ID int `form:"id"`
+    }
+
+    IDAndName {
+        ID int `json:"id"`
+        Name string `json:"name"`
+    }
+
+    UploadImageRequest {
+        File string `form:"file" file:"-"`
+    }
+)
+
+@server(
+    jwt: Jwt
+    group: common
+    swtags: 通用接口
+)
+
+service go-admin-template {
+    @doc "上传图片"
+    @handler uploadImage
+    post /upload/image(UploadImageRequest) returns (string)
+}

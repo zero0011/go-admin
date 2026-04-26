@@ -1,0 +1,63 @@
+syntax = "v1"
+
+type (
+    AdminRoleListRequest {
+        Page int `form:"page"`         // 分页
+        PageSize int `form:"pageSize"` // 每页条数
+    }
+
+    AdminRoleListResponse {
+        Total int `json:"total"`       // 总条数
+        Data []AdminRoleList `json:"data"`  // 具体数据
+    }
+
+    AdminRoleList {
+        ID int `json:"id"`
+        Name string `json:"name"` // 角色名
+    }
+
+    AdminRoleDetailResponse {
+        ID int `json:"id"`
+        Name string `json:"name"` // 角色名
+        Auth []int `json:"auth"`  // 权限ID
+    }
+
+    AdminRoleAddRequest {
+        Name string `json:"name" binding:"required"`      // 角色名
+        Auth []int `json:"auth" binding:"required,min=1"` // 权限ID
+    }
+
+    AdminRoleEditRequest {
+        PathID
+        AdminRoleAddRequest
+    }
+)
+
+@server(
+    jwt: Jwt
+    middleware: Auth
+    group: adminRole
+    swtags: 后台角色相关
+)
+
+service go-admin-template {
+    @doc "角色列表"
+    @handler list
+    get /admin/role (AdminRoleListRequest) returns (AdminRoleListResponse)
+
+    @doc "角色详情"
+    @handler detail
+    get /admin/role/:id (PathID) returns (AdminRoleDetailResponse)
+
+    @doc "添加角色"
+    @handler add
+    post /admin/role (AdminRoleAddRequest)
+
+    @doc "编辑角色"
+    @handler edit
+    put /admin/role/:id (AdminRoleEditRequest)
+
+    @doc "删除角色"
+    @handler del
+    delete /admin/role/:id (PathID)
+}

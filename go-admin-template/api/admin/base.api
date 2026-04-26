@@ -1,0 +1,52 @@
+syntax = "v1"
+
+type (
+    BaseAuthResponse {
+        ID int `json:"id"`
+        Pid int `json:"pid"`
+        Name string `json:"name"`        // 节点名
+        Children []BaseAuthResponse `json:"children"`  // 子节点
+    }
+
+    UserInfoResponse {
+        ID int `json:"id"`                  // 用户ID
+        Username string `json:"username"`   // 用户名
+        Realname string `json:"realname"`   // 真实姓名
+        Phone string `json:"phone"`         // 手机号
+        Rolename string `json:"rolename"`   // 角色名
+        Authkeys string `json:"authkeys"`   // 角色权限KEY
+    }
+
+    ChangeSelfPwdRequest {
+        OldPassword string `json:"oldPassword" binding:"required,min=6,max=255"`                     // 老密码
+        NewPassword string `json:"newPassword" binding:"required,nefield=OldPassword,min=6,max=255"` // 新密码
+        ConfirmPassword string `json:"confirmPassword" binding:"required,eqfield=NewPassword"`       // 确认密码
+    }
+)
+
+@server(
+    jwt: Jwt
+    group: adminBase
+    prefix: /base
+    swtags: 基础接口相关
+)
+
+service go-admin-template {
+    @doc "获取所有角色"
+    @handler role
+    get /role returns ([]IDAndName)
+
+    @doc "获取所有权限"
+    @handler auth
+    get /auth returns ([]BaseAuthResponse)
+
+    @doc "获取用户信息"
+    @handler userInfo
+    get /userInfo returns (UserInfoResponse)
+
+
+    @doc "修改自己的密码"
+    @handler changeSelfPwd
+    post /changeSelfPwd (ChangeSelfPwdRequest)
+}
+

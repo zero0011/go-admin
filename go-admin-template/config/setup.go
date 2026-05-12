@@ -14,6 +14,7 @@ var (
 	LogConf    = Log{}
 	MysqlConf  = Mysql{}
 	RedisConf  = Redis{}
+	AIConf     = AI{}
 )
 
 func Setup(fileName string) {
@@ -34,5 +35,6 @@ func Setup(fileName string) {
 	LogConf = cfgCnf.Log
 	MysqlConf = cfgCnf.Mysql
 	RedisConf = cfgCnf.Redis
+	AIConf = cfgCnf.AI
 
 }

@@ -64,6 +64,21 @@ const router = createRouter({
             ]
         },
         {
+            path: '/ai',
+            component: Layout,
+            redirect: '/ai/text2sql',
+            name: 'ai',
+            meta: { title: 'AI 功能', icon: 'ai' },
+            children: [
+                {
+                    path: 'text2sql',
+                    name: 'ai-text2sql',
+                    component: () => import('@/views/ai/TextToSQL.vue'),
+                    meta: { title: '智能数据查询', icon: 'ai' }
+                }
+            ]
+        },
+        {
             path: '/redirect',
             component: Layout,
             hidden: true,

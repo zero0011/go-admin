@@ -160,3 +160,14 @@ type ChangeSelfPwdRequest struct {
 	NewPassword     string `json:"newPassword" binding:"required,nefield=OldPassword,min=6,max=255" label:"新密码"` // 新密码
 	ConfirmPassword string `json:"confirmPassword" binding:"required,eqfield=NewPassword" label:"确认密码"`          // 确认密码
 }
+
+type Text2SQLRequest struct {
+	Question string `json:"question" binding:"required,max=500" label:"问题"` // 自然语言问题
+}
+
+type Text2SQLResponse struct {
+	SQL       string          `json:"sql"`       // 生成的 SQL 语句
+	Columns   []string        `json:"columns"`   // 列名列表
+	Rows      [][]interface{} `json:"rows"`      // 查询结果行
+	ChartType string          `json:"chartType"` // 推荐图表类型: number/bar/line/pie/table
+}

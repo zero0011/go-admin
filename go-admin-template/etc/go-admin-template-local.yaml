@@ -25,3 +25,10 @@ Redis:
   User:
   Pwd:
   Db: 0
+
+AI:
+  ApiKey: "sk-3871a15abffb474e88c6385afba3361d"
+  BaseURL: "https://api.deepseek.com/v1"
+  Model: "deepseek-chat"
+  MaxTokens: 512
+  QueryMaxRows: 1000

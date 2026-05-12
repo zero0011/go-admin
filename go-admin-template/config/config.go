@@ -6,6 +6,7 @@ type Cfg struct {
 	Log    Log
 	Mysql  Mysql
 	Redis  Redis
+	AI     AI
 }
 
 type Server struct {
@@ -39,4 +40,12 @@ type Redis struct {
 	User string
 	Pwd  string
 	Db   int
+}
+
+type AI struct {
+	ApiKey       string
+	BaseURL      string
+	Model        string
+	MaxTokens    int
+	QueryMaxRows int
 }

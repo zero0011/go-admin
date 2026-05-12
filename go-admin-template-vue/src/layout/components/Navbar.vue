@@ -17,7 +17,13 @@
             <el-dropdown class="avatar-container"
                          trigger="click">
                 <div class="avatar-wrapper">
-                    <svg-icon icon-class="avatar"
+                    <el-avatar v-if="userInfo.avatar"
+                               :src="userInfo.avatar"
+                               :size="40"
+                               shape="square"
+                               class="user-avatar" />
+                    <svg-icon v-else
+                              icon-class="avatar"
                               class="user-avatar"></svg-icon>
                     <i class="el-icon-caret-bottom" />
                 </div>

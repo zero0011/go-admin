@@ -130,6 +130,11 @@ func inferChartType(sql string, columns []string, rows [][]interface{}) string {
 		if datePattern.MatchString(sql) {
 			return "line"
 		}
+		// GROUP BY with categorical data (e.g. 占比/分布 queries that produce extra columns)
+		if rowCount > 0 && rowCount <= 8 {
+			return "pie"
+		}
+		return "bar"
 	}
 
 	return "table"

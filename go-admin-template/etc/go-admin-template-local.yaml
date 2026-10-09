@@ -9,14 +9,14 @@ Jwt:
   Expire: 24
 
 Log:
-  Dir: /Users/zhushuai05/project/go-admin/go-admin-template/logs
+  Dir: /Users/mac/project/go-admin/go-admin-template/logs
   Level: trace # 合法选项 "panic" "fatal" "error" "warn" "warning" "info" "debug" "trace"
 
 Mysql:
   Host: 127.0.0.1
   Port: 3306
   User: root
-  Pwd: zs123456
+  Pwd:
   Db: go-admin-template
 
 Redis:

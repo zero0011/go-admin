@@ -79,6 +79,21 @@ const router = createRouter({
             ]
         },
         {
+            path: '/file',
+            component: Layout,
+            redirect: '/file/manager',
+            name: 'file',
+            meta: { title: '文件管理', icon: 'folder' },
+            children: [
+                {
+                    path: 'manager',
+                    name: 'file-manager',
+                    component: () => import('@/views/file/index.vue'),
+                    meta: { title: '文件管理', icon: 'folder' }
+                }
+            ]
+        },
+        {
             path: '/redirect',
             component: Layout,
             hidden: true,

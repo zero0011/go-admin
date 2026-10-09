@@ -50,6 +50,9 @@ func Setup() {
 		logrus.Panic(err)
 	}
 
+	// 自动迁移模型
+	autoMigrate()
+
 	casbinSetup()
 }
 
@@ -71,4 +74,17 @@ func casbinSetup() {
 // DB 获取数据库实例
 func DB() *gorm.DB {
 	return db
+}
+
+// autoMigrate 自动迁移数据库表
+func autoMigrate() {
+	err := db.AutoMigrate(
+		&FileFolder{},
+		&SysFile{},
+		&SysFileChunk{},
+	)
+	if err != nil {
+		logrus.Panicf("自动迁移失败: %+v", errors.WithStack(err))
+	}
+	logrus.Info("数据库表自动迁移完成")
 }

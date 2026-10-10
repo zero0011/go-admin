@@ -19,6 +19,7 @@ func RegisterFileRoute(e *gin.Engine) {
 
 	// 文件管理
 	g.GET("/file/list", file.GetFileListHandle)
+	g.GET("/file/search", file.SearchFilesHandle)
 	g.POST("/file/upload", file.UploadFileHandle)
 	g.DELETE("/file/:id", file.DeleteFileHandle)
 	g.POST("/file/batch-delete", file.BatchDeleteFilesHandle)

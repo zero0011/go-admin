@@ -69,6 +69,21 @@ type FileListRequest struct {
 	PageSize       int     `form:"page_size" label:"每页条数"`
 }
 
+// FileSearchRequest 全局搜索请求
+type FileSearchRequest struct {
+	Keyword  string  `form:"keyword" binding:"required,max=255" label:"搜索关键词"`
+	FileType *string `form:"file_type" label:"文件类型"`
+	SortBy   string  `form:"sort_by" label:"排序方式"`
+	Page     int     `form:"page" label:"页码"`
+	PageSize int     `form:"page_size" label:"每页条数"`
+}
+
+// FilePathItem 路径节点
+type FilePathItem struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 // FileItem 文件项
 type FileItem struct {
 	AssetID        int       `json:"asset_id"`
@@ -82,16 +97,17 @@ type FileItem struct {
 
 // FileListItem 文件/文件夹混合列表项
 type FileListItem struct {
-	Type           string  `json:"type"` // "folder" 或 "asset"
-	FolderID       *int    `json:"folder_id,omitempty"`
-	FolderName     string  `json:"folder_name,omitempty"`
-	ParentFolderID *int    `json:"parent_folder_id,omitempty"`
-	AssetID        *int    `json:"asset_id,omitempty"`
-	FileName       string  `json:"file_name,omitempty"`
-	FileURL        string  `json:"file_url,omitempty"`
-	FileSize       *int64  `json:"file_size,omitempty"`
-	FileExt        string  `json:"file_ext,omitempty"`
-	CreatedAt      *string `json:"created_at,omitempty"`
+	Type           string         `json:"type"` // "folder" 或 "asset"
+	FolderID       *int           `json:"folder_id,omitempty"`
+	FolderName     string         `json:"folder_name,omitempty"`
+	ParentFolderID *int           `json:"parent_folder_id,omitempty"`
+	AssetID        *int           `json:"asset_id,omitempty"`
+	FileName       string         `json:"file_name,omitempty"`
+	FileURL        string         `json:"file_url,omitempty"`
+	FileSize       *int64         `json:"file_size,omitempty"`
+	FileExt        string         `json:"file_ext,omitempty"`
+	CreatedAt      *string        `json:"created_at,omitempty"`
+	Path           []FilePathItem `json:"path,omitempty"` // 所在目录路径（不含自身），仅搜索结果返回
 }
 
 // FileListResponse 获取文件列表响应

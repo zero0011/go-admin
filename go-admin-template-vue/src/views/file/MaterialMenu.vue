@@ -39,9 +39,10 @@
             <div class="section-title">搜索</div>
             <el-input
                 v-model="searchKeyword"
-                placeholder="请输入关键词"
+                placeholder="搜索全部文件/文件夹"
                 clearable
-                @keyup.enter="handleSearch">
+                @keyup.enter="handleSearch"
+                @clear="handleSearch">
                 <template #prefix>
                     <el-icon><Search /></el-icon>
                 </template>
@@ -78,6 +79,10 @@ const props = defineProps({
     sortBy: {
         type: String,
         default: 'time_desc'
+    },
+    keyword: {
+        type: String,
+        default: ''
     }
 })
 
@@ -95,6 +100,10 @@ watch(() => props.fileType, (val) => {
 
 watch(() => props.sortBy, (val) => {
     localSortBy.value = val
+})
+
+watch(() => props.keyword, (val) => {
+    searchKeyword.value = val
 })
 
 const handleTypeChange = (type) => {

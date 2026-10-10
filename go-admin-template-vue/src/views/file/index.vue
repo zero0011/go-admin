@@ -6,10 +6,11 @@
                 <MaterialMenu
                     :file-type="fileType"
                     :sort-by="sortBy"
+                    :keyword="searchKeyword"
                     @type-change="handleTypeChange"
                     @sort-change="handleSortChange"
                     @create-folder="handleCreateFolder"
-                    @refresh="loadFileList"
+                    @refresh="refresh"
                     @search="handleSearch"/>
             </el-aside>
 
@@ -23,6 +24,8 @@
                     :breadcrumb-list="breadcrumbList"
                     :page="page"
                     :page-size="pageSize"
+                    :search-mode="searchMode"
+                    :search-keyword="searchKeyword"
                     @folder-click="handleFolderClick"
                     @file-click="handleFileClick"
                     @folder-back="handleFolderBack"
@@ -31,7 +34,8 @@
                     @file-delete="handleFileDelete"
                     @file-download="handleFileDownload"
                     @page-change="handlePageChange"
-                    @upload-success="loadFileList"/>
+                    @clear-search="handleClearSearch"
+                    @upload-success="refresh"/>
             </el-main>
         </el-container>
     </div>
@@ -41,7 +45,7 @@
 import { ref, onMounted } from 'vue'
 import MaterialMenu from './MaterialMenu.vue'
 import MaterialContent from './MaterialContent.vue'
-import { getFileList, createFolder, renameFolder, deleteFolder, deleteFile } from '@/api/file'
+import { getFileList, searchFiles, createFolder, renameFolder, deleteFolder, deleteFile } from '@/api/file'
 
 // 状态
 const loading = ref(false)
@@ -53,7 +57,8 @@ const page = ref(1)
 const pageSize = ref(20)
 const fileType = ref('')
 const sortBy = ref('time_desc')
-const keyword = ref('')
+const searchMode = ref(false)
+const searchKeyword = ref('')
 
 // 加载文件列表
 const loadFileList = async () => {
@@ -63,7 +68,6 @@ const loadFileList = async () => {
             parent_folder_id: currentFolderId.value,
             file_type: fileType.value || undefined,
             sort_by: sortBy.value,
-            keyword: keyword.value || undefined,
             page: page.value,
             page_size: pageSize.value
         })
@@ -78,21 +82,57 @@ const loadFileList = async () => {
     }
 }
 
+// 全局搜索
+const loadSearchResults = async () => {
+    loading.value = true
+    try {
+        const res = await searchFiles({
+            keyword: searchKeyword.value,
+            file_type: fileType.value || undefined,
+            sort_by: sortBy.value,
+            page: page.value,
+            page_size: pageSize.value
+        })
+        if (res.code === 0) {
+            fileList.value = res.data.list
+            total.value = res.data.total
+        }
+    } catch (error) {
+        console.error('搜索失败:', error)
+    } finally {
+        loading.value = false
+    }
+}
+
+// 根据当前模式刷新数据
+const refresh = () => {
+    if (searchMode.value) {
+        loadSearchResults()
+    } else {
+        loadFileList()
+    }
+}
+
 // 文件类型筛选
 const handleTypeChange = (type) => {
     fileType.value = type
     page.value = 1
-    loadFileList()
+    refresh()
 }
 
 // 排序方式改变
 const handleSortChange = (sort) => {
     sortBy.value = sort
-    loadFileList()
+    refresh()
 }
 
 // 文件夹点击
 const handleFolderClick = (folder) => {
+    // 搜索模式下点击文件夹结果：退出搜索，进入该文件夹
+    if (searchMode.value) {
+        searchMode.value = false
+        searchKeyword.value = ''
+    }
     currentFolderId.value = folder.folder_id
     breadcrumbList.value.push({
         id: folder.folder_id,
@@ -125,7 +165,7 @@ const handleCreateFolder = async (folderName) => {
             parent_id: currentFolderId.value
         })
         if (res.code === 0) {
-            loadFileList()
+            refresh()
         }
     } catch (error) {
         console.error('创建文件夹失败:', error)
@@ -137,7 +177,7 @@ const handleFolderRename = async (id, newName) => {
     try {
         const res = await renameFolder(id, { folder_name: newName })
         if (res.code === 0) {
-            loadFileList()
+            refresh()
         }
     } catch (error) {
         console.error('重命名文件夹失败:', error)
@@ -149,7 +189,7 @@ const handleFolderDelete = async (id) => {
     try {
         const res = await deleteFolder(id)
         if (res.code === 0) {
-            loadFileList()
+            refresh()
         }
     } catch (error) {
         console.error('删除文件夹失败:', error)
@@ -161,7 +201,7 @@ const handleFileDelete = async (id) => {
     try {
         const res = await deleteFile(id)
         if (res.code === 0) {
-            loadFileList()
+            refresh()
         }
     } catch (error) {
         console.error('删除文件失败:', error)
@@ -176,12 +216,26 @@ const handleFileDownload = (file) => {
 // 分页改变
 const handlePageChange = (newPage) => {
     page.value = newPage
-    loadFileList()
+    refresh()
 }
 
-// 搜索
-const handleSearch = (searchKeyword) => {
-    keyword.value = searchKeyword
+// 搜索（全局，按名称子串模糊匹配）
+const handleSearch = (kw) => {
+    const k = (kw || '').trim()
+    if (!k) {
+        handleClearSearch()
+        return
+    }
+    searchKeyword.value = k
+    searchMode.value = true
+    page.value = 1
+    loadSearchResults()
+}
+
+// 清除搜索，恢复目录浏览
+const handleClearSearch = () => {
+    searchMode.value = false
+    searchKeyword.value = ''
     page.value = 1
     loadFileList()
 }

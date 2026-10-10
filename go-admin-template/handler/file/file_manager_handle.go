@@ -76,6 +76,17 @@ func GetFileListHandle(c *gin.Context) {
 	response.HandleResponse(c, resp, err)
 }
 
+// SearchFilesHandle 全局搜索文件/文件夹
+func SearchFilesHandle(c *gin.Context) {
+	var req types.FileSearchRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.HandleResponse(c, nil, err)
+		return
+	}
+	resp, err := file.SearchFiles(svc.NewServiceContext(c), &req)
+	response.HandleResponse(c, resp, err)
+}
+
 // UploadFileHandle 单文件上传
 func UploadFileHandle(c *gin.Context) {
 	var req types.FileUploadRequest

@@ -48,6 +48,15 @@ export function getFileList(params) {
     })
 }
 
+// 全局搜索文件/文件夹
+export function searchFiles(params) {
+    return request({
+        url: '/file/search',
+        method: 'get',
+        params
+    })
+}
+
 // 单文件上传
 export function uploadFile(formData) {
     return request({

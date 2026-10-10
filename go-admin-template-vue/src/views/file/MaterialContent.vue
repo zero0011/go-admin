@@ -2,8 +2,18 @@
     <div class="material-content">
         <!-- 工具栏 -->
         <div class="content-header">
+            <!-- 搜索结果横幅 -->
+            <div v-if="searchMode" class="search-banner">
+                <span class="search-banner-text">
+                    搜索 “{{ searchKeyword }}”，共 {{ total }} 个结果
+                </span>
+                <el-button link type="primary" @click="emit('clear-search')">
+                    清除搜索
+                </el-button>
+            </div>
+
             <!-- 面包屑 -->
-            <div class="breadcrumb">
+            <div class="breadcrumb" v-else>
                 <el-breadcrumb separator="/">
                     <el-breadcrumb-item
                         v-for="(item, index) in breadcrumbList"
@@ -51,6 +61,12 @@
                             <el-icon :size="48"><Folder /></el-icon>
                         </div>
                         <div class="file-name">{{ item.folder_name }}</div>
+                        <div
+                            v-if="searchMode && item.path && item.path.length"
+                            class="file-path"
+                            :title="formatPath(item.path)">
+                            {{ formatPath(item.path) }}
+                        </div>
                         <div class="file-actions">
                             <el-button
                                 type="primary"
@@ -79,6 +95,12 @@
                             <el-icon v-else :size="48"><Document /></el-icon>
                         </div>
                         <div class="file-name" :title="item.file_name">{{ item.file_name }}</div>
+                        <div
+                            v-if="searchMode && item.path && item.path.length"
+                            class="file-path"
+                            :title="formatPath(item.path)">
+                            {{ formatPath(item.path) }}
+                        </div>
                         <div class="file-size">{{ formatFileSize(item.file_size) }}</div>
                         <div class="file-actions">
                             <el-button
@@ -180,6 +202,14 @@ const props = defineProps({
     pageSize: {
         type: Number,
         default: 20
+    },
+    searchMode: {
+        type: Boolean,
+        default: false
+    },
+    searchKeyword: {
+        type: String,
+        default: ''
     }
 })
 
@@ -193,7 +223,8 @@ const emit = defineEmits([
     'file-download',
     'page-change',
     'upload-success',
-    'search'
+    'search',
+    'clear-search'
 ])
 
 const uploadUrl = '/api/file/upload'
@@ -234,6 +265,9 @@ const formatFileSize = (size) => {
     }
     return `${s.toFixed(2)} ${units[index]}`
 }
+
+// 格式化搜索结果所在路径
+const formatPath = (path) => (path || []).map(p => p.name).join(' / ')
 
 // 点击面包屑
 const handleBreadcrumbClick = (index) => {
@@ -456,6 +490,18 @@ const handlePageChange = (page) => {
   align-items: center;
 }
 
+.search-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #606266;
+}
+
+.search-banner-text {
+  font-weight: 500;
+}
+
 .breadcrumb-link {
   cursor: pointer;
   color: #409eff;
@@ -516,6 +562,16 @@ const handlePageChange = (page) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.file-path {
+  font-size: 12px;
+  color: #909399;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
   margin-bottom: 4px;
 }
 

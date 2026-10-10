@@ -276,6 +276,168 @@ func getExtByFileType(fileType string) string {
 	return ""
 }
 
+// ========== 全局搜索 Logic ==========
+
+// searchUnionRow 全局搜索 UNION 查询行
+type searchUnionRow struct {
+	Type       string    `gorm:"column:type"`
+	RefID      int       `gorm:"column:ref_id"`
+	Name       string    `gorm:"column:name"`
+	Ext        string    `gorm:"column:ext"`
+	URL        string    `gorm:"column:url"`
+	Size       int64     `gorm:"column:size"`
+	ParentID   *int      `gorm:"column:parent_id"`
+	CreateTime time.Time `gorm:"column:create_time"`
+}
+
+// SearchFiles 全局搜索文件/文件夹（按名称子串模糊匹配，跨全部目录）
+func SearchFiles(ctx *svc.ServiceContext, req *types.FileSearchRequest) (*types.FileListResponse, error) {
+	db := model.DB()
+
+	// 分页默认值与上限
+	if req.Page < 1 {
+		req.Page = 1
+	}
+	if req.PageSize < 1 {
+		req.PageSize = 20
+	}
+	if req.PageSize > 100 {
+		req.PageSize = 100
+	}
+
+	like := "%" + req.Keyword + "%"
+
+	folderSQL := `SELECT 'folder' AS type, id AS ref_id, folder_name AS name, '' AS ext, '' AS url, 0 AS size, parent_id AS parent_id, create_time
+FROM sys_file_folder
+WHERE delete_time IS NULL AND folder_name LIKE ?`
+	fileSQL := `SELECT 'asset' AS type, id AS ref_id, file_name AS name, file_ext AS ext, file_path AS url, file_size AS size, folder_id AS parent_id, create_time
+FROM sys_file
+WHERE delete_time IS NULL AND file_name LIKE ?`
+
+	args := []interface{}{like, like}
+	if req.FileType != nil && *req.FileType != "" {
+		if ext := getExtByFileType(*req.FileType); ext != "" {
+			fileSQL += " AND file_ext = ?"
+			args = append(args, ext)
+		}
+	}
+
+	unionSQL := folderSQL + " UNION ALL " + fileSQL
+
+	// 排序白名单（禁止拼接用户输入）
+	orderMap := map[types.SortBy]string{
+		types.SortByNameAsc:  "name ASC",
+		types.SortByNameDesc: "name DESC",
+		types.SortByTimeAsc:  "create_time ASC",
+		types.SortByTimeDesc: "create_time DESC",
+		types.SortBySizeAsc:  "size ASC",
+		types.SortBySizeDesc: "size DESC",
+	}
+	order := orderMap[types.SortBy(req.SortBy)]
+	if order == "" {
+		order = "create_time DESC"
+	}
+
+	// 总数
+	var total int64
+	if err := db.Raw("SELECT COUNT(*) FROM ("+unionSQL+") t", args...).Scan(&total).Error; err != nil {
+		ctx.Log.Errorf("%+v", errors.WithStack(err))
+		return nil, errors.New("搜索失败")
+	}
+
+	// 分页数据
+	offset := (req.Page - 1) * req.PageSize
+	dataArgs := append(append([]interface{}{}, args...), req.PageSize, offset)
+	var rows []searchUnionRow
+	if err := db.Raw(unionSQL+" ORDER BY "+order+" LIMIT ? OFFSET ?", dataArgs...).Scan(&rows).Error; err != nil {
+		ctx.Log.Errorf("%+v", errors.WithStack(err))
+		return nil, errors.New("搜索失败")
+	}
+
+	// 载入全部文件夹，用于补全结果所在路径
+	folderMap, err := loadFolderMap(db)
+	if err != nil {
+		ctx.Log.Errorf("%+v", errors.WithStack(err))
+		return nil, errors.New("搜索失败")
+	}
+
+	result := make([]types.FileListItem, 0, len(rows))
+	for _, r := range rows {
+		path := buildFolderPath(r.ParentID, folderMap)
+		createdAt := r.CreateTime.Format("2006-01-02 15:04:05")
+
+		if r.Type == "folder" {
+			result = append(result, types.FileListItem{
+				Type:           "folder",
+				FolderID:       lo.ToPtr(r.RefID),
+				FolderName:     r.Name,
+				ParentFolderID: r.ParentID,
+				CreatedAt:      lo.ToPtr(createdAt),
+				Path:           path,
+			})
+			continue
+		}
+
+		result = append(result, types.FileListItem{
+			Type:           "asset",
+			AssetID:        lo.ToPtr(r.RefID),
+			FileName:       r.Name,
+			FileURL:        r.URL,
+			FileSize:       lo.ToPtr(r.Size),
+			FileExt:        r.Ext,
+			ParentFolderID: r.ParentID,
+			CreatedAt:      lo.ToPtr(createdAt),
+			Path:           path,
+		})
+	}
+
+	return &types.FileListResponse{
+		Total: int(total),
+		List:  result,
+	}, nil
+}
+
+// loadFolderMap 载入全部文件夹，构建 id → 文件夹 映射
+func loadFolderMap(db *gorm.DB) (map[int]model.FileFolder, error) {
+	var folders []model.FileFolder
+	if err := db.Select("id, folder_name, parent_id").Find(&folders).Error; err != nil {
+		return nil, err
+	}
+	m := make(map[int]model.FileFolder, len(folders))
+	for _, f := range folders {
+		m[f.ID] = f
+	}
+	return m, nil
+}
+
+// buildFolderPath 自底向上构建目录路径（不含自身）
+func buildFolderPath(parentID *int, folderMap map[int]model.FileFolder) []types.FilePathItem {
+	path := make([]types.FilePathItem, 0)
+	visited := make(map[int]bool)
+	const maxDepth = 64
+
+	cur := parentID
+	for depth := 0; cur != nil && depth < maxDepth; depth++ {
+		if visited[*cur] {
+			break
+		}
+		f, ok := folderMap[*cur]
+		if !ok {
+			break
+		}
+		visited[*cur] = true
+		path = append(path, types.FilePathItem{ID: f.ID, Name: f.FolderName})
+		cur = f.ParentID
+	}
+
+	// 反转，得到根 → 叶的顺序
+	for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
+		path[i], path[j] = path[j], path[i]
+	}
+
+	return path
+}
+
 // UploadFile 单文件上传
 func UploadFile(ctx *svc.ServiceContext, req *types.FileUploadRequest) (*types.FileUploadResponse, error) {
 	db := model.DB()

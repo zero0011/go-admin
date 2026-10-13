@@ -1,5 +1,6 @@
 # figma mcp
 
+
 # skill
 
 
@@ -8,11 +9,13 @@
 
 # leetcode
 
+# 站内信，实时公告 - sse怎么设计的
 
-# 站内信，实时公告
-
-
-# react-native
+先搞定这个
 
 
-# agent开发，SSE推送
+# agent开发？？这是什么？
+
+LLM + 模型调用 + agent开发
+
+这是什么？

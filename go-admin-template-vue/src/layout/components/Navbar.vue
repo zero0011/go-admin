@@ -10,6 +10,7 @@
                     class="breadcrumb-container" />
 
         <div class="right-menu">
+            <message-bell />
             <div class="user-info">
                 <div class="name">{{ userInfo.realname }}</div>
                 <div class="role">{{ userInfo.rolename }}</div>
@@ -90,11 +91,13 @@ import Breadcrumb from '@/components/Breadcrumb/index.vue'
 import Hamburger from '@/components/Hamburger/index.vue'
 import TopNav from '@/components/TopNav/index.vue'
 import { changePwd } from '@/api/user'
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import useAppStore from '@/store/app'
 import useUserStore from '@/store/user'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import MessageBell from '@/components/MessageBell/index.vue'
+import useMessageStore from '@/store/message'
 
 // store
 const appStore = useAppStore()
@@ -107,6 +110,15 @@ const router = useRouter()
 
 // refs
 const elFormRef = ref()
+
+// message bell：进入布局（已登录）建立 SSE 连接，离开布局（登出）断开
+const messageStore = useMessageStore()
+onMounted(() => {
+    messageStore.connect()
+})
+onUnmounted(() => {
+    messageStore.disconnect()
+})
 
 // data
 const showDialog = ref(false)

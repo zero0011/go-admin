@@ -82,6 +82,8 @@ func autoMigrate() {
 		&FileFolder{},
 		&SysFile{},
 		&SysFileChunk{},
+		&SysMessage{},
+		&SysMessageRead{},
 	)
 	if err != nil {
 		logrus.Panicf("自动迁移失败: %+v", errors.WithStack(err))

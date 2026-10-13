@@ -60,6 +60,13 @@ const router = createRouter({
                     permission: 'admin:auth',
                     component: () => import('@/views/admin/auth/index.vue'),
                     meta: { title: '权限管理', icon: 'auth' }
+                },
+                // 公告发布（复用后台管理权限，不新增权限点）
+                {
+                    path: 'announcement',
+                    name: 'admin-announcement',
+                    component: () => import('@/views/message/announcement/index.vue'),
+                    meta: { title: '公告发布', icon: 'bell' }
                 }
             ]
         },

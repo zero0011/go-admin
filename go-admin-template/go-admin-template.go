@@ -14,6 +14,7 @@ import (
 	"go-admin-template/pkg/logger"
 	"go-admin-template/pkg/prometheus"
 	"go-admin-template/pkg/redis"
+	"go-admin-template/pkg/sse"
 	"go-admin-template/pkg/swagger"
 	"go-admin-template/query"
 	"go-admin-template/routes"
@@ -47,6 +48,7 @@ func main() {
 	redis.Setup()
 	model.Setup()
 	query.SetDefault(model.DB())
+	sse.StartSubscriber()
 	routes.Setup(e)
 	swagger.Setup(e)
 

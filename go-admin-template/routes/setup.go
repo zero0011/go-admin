@@ -10,6 +10,7 @@ import (
 	aiRoutes "go-admin-template/routes/ai"
 	common "go-admin-template/routes/common"
 	fileRoutes "go-admin-template/routes/file"
+	messageRoutes "go-admin-template/routes/message"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,4 +27,5 @@ func Setup(e *gin.Engine) {
 	adminBase.RegisterAdminBaseRoute(e)
 	aiRoutes.RegisterAIRoute(e)
 	fileRoutes.RegisterFileRoute(e)
+	messageRoutes.RegisterMessageRoute(e)
 }
